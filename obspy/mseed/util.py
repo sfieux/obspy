@@ -600,11 +600,11 @@ def set_flags_in_fixed_headers(filename, flags):
       apply to every single trace in the file. Padding spaces are ignored.
     * ``flag_group``: which flag group is to be changed. One of
       ``'activity_flags'``, ``'io_clock_flags'``, ``'data_qual_flags'`` is
-      expected. Invalid flag groups will be ignored.
+      expected. Invalid flag groups raise a ValueError.
     * ``flag_name``: the name of the flag. Possible values are matched with
       ``obspy.mseed.headers.FIXED_HEADER_ACTIVITY_FLAGS``,
       ``FIXED_HEADER_IO_CLOCK_FLAGS`` or ``FIXED_HEADER_DATA_QUAL_FLAGS``
-      depending on the flag_group. Invalid flags are ignored.
+      depending on the flag_group. Invalid flags raise a ValueError.
     * ``flag_value``: the value you want for this flag. Expected value is a
       bool (always True/False) or a dict to store the moments and durations
       when this flag is True. Expected syntax for this dict is accurately
