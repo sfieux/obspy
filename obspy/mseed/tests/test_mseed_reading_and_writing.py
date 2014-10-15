@@ -938,7 +938,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         st = read(filename, details=True)
         dt = np.dtype([(native_str('npts'), native_str('i4')),
                        (native_str('qual'), native_str('i4'))])
-        res = np.array([(tr.stats.npts, tr.stats.mseed.timing_quality)
+        res = np.array([(tr.stats.npts, tr.stats.mseed.blkt1001.timing_quality)
                         for tr in st], dtype=dt)
         one_big_st = read(filename)  # do not read timing quality info
         # timing_quality splits the stream additionally when timing quality
