@@ -1032,7 +1032,6 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                    UTCDateTime("2009-12-25T06:00:00.0")]}
         self.assertRaises(ValueError, util._checkFlagValue, flag_value)
 
-
     def test_searchFlagInBlockette(self):
         """
         Test case for obspy.mseed.util._searchFlagInBlockette
@@ -1060,7 +1059,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 # Test from file start
                 read_bytes = util._searchFlagInBlockette(file_desc,
                                                          48, 1001, 4, 1)
-                self.assertIsNotNone(read_bytes)
+                self.assertFalse(read_bytes is None)
                 self.assertEqual(unpack(native_str(">B"), read_bytes)[0], 63)
 
                 # Test from middle of a record header
@@ -1068,7 +1067,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 file_pos = file_desc.tell()
                 read_bytes = util._searchFlagInBlockette(file_desc,
                                                          34, 1000, 6, 1)
-                self.assertIsNotNone(read_bytes)
+                self.assertFalse(read_bytes is None)
                 self.assertEqual(unpack(native_str(">B"), read_bytes)[0], 9)
                 # Check that file_desc position has not changed
                 self.assertEqual(file_desc.tell(), file_pos)
@@ -1077,7 +1076,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 file_desc.seek(60, os.SEEK_CUR)
                 read_bytes = util._searchFlagInBlockette(file_desc,
                                                          -26, 1001, 5, 1)
-                self.assertIsNotNone(read_bytes)
+                self.assertFalse(read_bytes is None)
                 self.assertEqual(unpack(native_str(">B"), read_bytes)[0], 42)
 
                 # Test another record. There is at least 3 records in a
@@ -1090,8 +1089,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
                 # Test missing blockette
                 read_bytes = util._searchFlagInBlockette(file_desc,
                                                          32, 201, 4, 4)
-                self.assertIsNone(read_bytes)
-
+                self.assertTrue(read_bytes is None)
 
     def test_convertFlagsToRawByte(self):
         """
@@ -1100,10 +1098,10 @@ class MSEEDUtilTestCase(unittest.TestCase):
 
         recstart = UTCDateTime("2009-12-25T06:00:00.0")
         recend = UTCDateTime("2009-12-26T06:00:00.0")
-        user_flags = {\
+        user_flags = {
             # boolean flags
             'calib_signal': True,
-            'time_correction':False,
+            'time_correction': False,
             # instant value
             'begin_event': [(UTCDateTime("2009-12-25T07:00:00.0"),
                              UTCDateTime("2009-12-25T07:00:00.0"))],
@@ -1162,7 +1160,6 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                                 recstart, recend)
         self.assertEqual(data_qual, 85)
 
-
     def test_set_flags_in_fixed_header(self):
         """
         Test case for obspy.mseed.util.set_flags_in_fixed_headers
@@ -1204,8 +1201,9 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                                 'negative_leap': False},
                              'io_clock_flags': {'start_of_time_series': True,
                                                 'clock_locked': True},
-                             'data_qual_flags': {'glitches_detected': True,
-                                                 'time_tag_questionable': True}}
+                             'data_qual_flags': {
+                                 'glitches_detected': True,
+                                 'time_tag_questionable': True}}
 
             expected_classic = pack(native_str('BBB'), 0x15, 0x28, 0x88)
             expected_leap_mod = pack(native_str('BBB'), 0x05, 0x28, 0x88)
@@ -1253,7 +1251,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
             cur_dict = wild_plus['NE.STATI.LO.CHB']['data_qual_flags']
             cur_dict['glitches_detected'] = True
             set_flags_in_fixed_headers(file_name, wild_plus)
-            self._check_values(tf, 'NE.STATI.LO.CHA', [], expected_classic, 512)
+            self._check_values(tf, 'NE.STATI.LO.CHA', [], expected_classic, 
+                               512)
             self._check_values(tf, 'NE.STATI.LO.CHB', [],
                                expected_glitch_mod, 512)
             self._check_values(tf, 'NE.STATJ.LO.CHB', [],
@@ -1281,7 +1280,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             # Put back previous values
             set_flags_in_fixed_headers(file_name, all_traces)
 
-                        # Test dated flags
+            # Test dated flags
             dated_flags = {'activity_flags': {
                 # calib should be at first record
                 'calib_signal': UTCDateTime("2012-08-01T12:00:30.0"),
@@ -1306,7 +1305,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
             self._check_values(tf, 'NE.STATI.LO.CHA', [0], expected_first, 512)
             self._check_values(tf, 'NE.STATI.LO.CHA', [1, 2],
                                expected_second, 512)
-            self._check_values(tf, 'NE.STATI.LO.CHA', [3], expected_fourth, 512)
+            self._check_values(tf, 'NE.STATI.LO.CHA', [3], expected_fourth, 
+                               512)
             self._check_values(tf, 'NE.STATI.LO.CHA', [10],
                                expected_afterfourth, 512)
 
@@ -1314,7 +1314,6 @@ class MSEEDUtilTestCase(unittest.TestCase):
             wrong_trace = {'not_three_points': copy.deepcopy(classic_flags)}
             self.assertRaises(ValueError, set_flags_in_fixed_headers,
                               file_name, wrong_trace)
-
 
     def _check_values(self, file_bfr, trace_id, record_numbers, expected_bytes,
                       reclen):
