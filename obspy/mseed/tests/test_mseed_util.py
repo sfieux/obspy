@@ -706,7 +706,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             cur_dict = wild_plus['NE.STATI.LO.CHB']['data_qual_flags']
             cur_dict['glitches_detected'] = True
             set_flags_in_fixed_headers(file_name, wild_plus)
-            self._check_values(tf, 'NE.STATI.LO.CHA', [], expected_classic, 
+            self._check_values(tf, 'NE.STATI.LO.CHA', [], expected_classic,
                                512)
             self._check_values(tf, 'NE.STATI.LO.CHB', [],
                                expected_glitch_mod, 512)
@@ -760,7 +760,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
             self._check_values(tf, 'NE.STATI.LO.CHA', [0], expected_first, 512)
             self._check_values(tf, 'NE.STATI.LO.CHA', [1, 2],
                                expected_second, 512)
-            self._check_values(tf, 'NE.STATI.LO.CHA', [3], expected_fourth, 
+            self._check_values(tf, 'NE.STATI.LO.CHA', [3], expected_fourth,
                                512)
             self._check_values(tf, 'NE.STATI.LO.CHA', [10],
                                expected_afterfourth, 512)
