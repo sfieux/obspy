@@ -649,7 +649,7 @@ def set_flags_in_fixed_headers(filename, flags):
                     { "INSTANT" : [date5, date6],
                       "DURATION" : [date1, date2, date3, date4]}}}}
 
-    :raises: Exception is raised if the file is not a MiniSEED file. ValueError
+    :raises: IOError is raised if the file is not a MiniSEED file. ValueError
     is raised if one of the flag group, flag name or flag value is incorrect.
     """
 
@@ -657,7 +657,7 @@ def set_flags_in_fixed_headers(filename, flags):
     from obspy.mseed.core import isMSEED
     # Basic check
     if not os.path.isfile(filename) or not isMSEED(filename):
-        raise Exception("File %s is not a valid MiniSEED file" % filename)
+        raise IOError("File %s is not a valid MiniSEED file" % filename)
     filesize = os.path.getsize(filename)
 
     # Nested dictionaries to allow empty strings as wildcards
@@ -857,7 +857,7 @@ def set_flags_in_fixed_headers(filename, flags):
 
             if reclen_pow is None:
                 msg = "Invalid MiniSEED file. No blockette 1000 was found."
-                raise Exception(msg)
+                raise IOError(msg)
             else:
                 reclen_pow = unpack(native_str("B"), reclen_pow)[0]
                 reclen = 2**reclen_pow

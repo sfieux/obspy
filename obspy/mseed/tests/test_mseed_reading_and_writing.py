@@ -2,7 +2,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 from future.builtins import *  # NOQA
-from future.utils import native_str
+from future.utils import native_str, bytes_to_native_str
 
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core import AttribDict
@@ -358,7 +358,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         npts = 1000
         # data array of integers - float won't work!
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         st = Stream([Trace(data=data)])
         with NamedTemporaryFile() as tf:
@@ -414,13 +414,12 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         Tests Mini-SEED writing with an sequence number starting at something
         different than 1.
         """
-        
-        npts = 2200 # At least 3 records of 512 bytes
-        np.random.seed(815)  # make test reproducable
+        npts = 2200  # At least 3 records of 512 bytes
+        np.random.seed(815)  # make test reproducible
         numPyData = np.random.randint(-1000, 1000, npts).astype(np.int32)
         starttime = UTCDateTime(2008, 1, 1, 0, 0, 10)
         header = {'network': "NE", 'station': "STATI", 'location': "LO",
-                  'channel': "CHA", 'npts': npts, 'sampling_rate':1,
+                  'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
                   'starttime': starttime,
                   'mseed': {'dataquality': "D", "sequence_number": "str"}}
 
@@ -429,35 +428,35 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         dataStream = Stream([dataTrace])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            self.assertRaises(ValueError, dataStream.write, tempfile, 
+            self.assertRaises(ValueError, dataStream.write, tempfile,
                               format="MSEED", encoding=11, reclen=512)
 
-        # Seq num out of range
+        # Seq num out of range #1
         header = {'network': "NE", 'station': "STATI", 'location': "LO",
-                  'channel': "CHA", 'npts': npts, 'sampling_rate':1,
+                  'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
                   'starttime': starttime,
                   'mseed': {'dataquality': "D", "sequence_number": -1}}
         dataTrace = Trace(data=numPyData, header=header)
         dataStream = Stream([dataTrace])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            self.assertRaises(ValueError, dataStream.write, tempfile, 
+            self.assertRaises(ValueError, dataStream.write, tempfile,
                               format="MSEED", encoding=11, reclen=512)
         # Seq num out of range #2
         header = {'network': "NE", 'station': "STATI", 'location': "LO",
-                  'channel': "CHA", 'npts': npts, 'sampling_rate':1,
+                  'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
                   'starttime': starttime,
                   'mseed': {'dataquality': "D", "sequence_number": 1000001}}
         dataTrace = Trace(data=numPyData, header=header)
         dataStream = Stream([dataTrace])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            self.assertRaises(ValueError, dataStream.write, tempfile, 
+            self.assertRaises(ValueError, dataStream.write, tempfile,
                               format="MSEED", encoding=11, reclen=512)
 
         # Seq num missing, defaults to 1
         header = {'network': "NE", 'station': "STATI", 'location': "LO",
-                  'channel': "CHA", 'npts': npts, 'sampling_rate':1,
+                  'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
                   'starttime': starttime,
                   'mseed': {'dataquality': "D"}}
         dataTrace = Trace(data=numPyData, header=header)
@@ -466,11 +465,12 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             tempfile = tf.name
             dataStream.write(tempfile, format="MSEED", encoding=11, reclen=512)
             tf.seek(0, os.SEEK_SET)
-            self.assertEqual(tf.read(6), native_str("000001"))
+            self.assertEqual(bytes_to_native_str(tf.read(6)),
+                             native_str("000001"))
 
         # Seq num changed to 999998, expecting rollover
         header = {'network': "NE", 'station': "STATI", 'location': "LO",
-                  'channel': "CHA", 'npts': npts, 'sampling_rate':1,
+                  'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
                   'starttime': starttime,
                   'mseed': {'dataquality': "D", "sequence_number": 999998}}
         dataTrace = Trace(data=numPyData, header=header)
@@ -479,11 +479,27 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             tempfile = tf.name
             dataStream.write(tempfile, format="MSEED", encoding=11, reclen=512)
             tf.seek(0, os.SEEK_SET)
-            seq_counts = [native_str("999998"), native_str("999999"), 
+            seq_counts = [native_str("999998"), native_str("999999"),
                           native_str("000001")]
             for _i in range(0, 3):
-                self.assertEqual(tf.read(6), seq_counts[_i])
+                self.assertEqual(bytes_to_native_str(tf.read(6)),
+                                 seq_counts[_i])
                 tf.seek(506, os.SEEK_CUR)
+
+        # Setting sequence number as kwarg argument of write
+        header = {'network': "NE", 'station': "STATI", 'location': "LO",
+                  'channel': "CHA", 'npts': npts, 'sampling_rate': 1,
+                  'starttime': starttime,
+                  'mseed': {'dataquality': "D"}}
+        dataTrace = Trace(data=numPyData, header=header)
+        dataStream = Stream([dataTrace])
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            dataStream.write(tempfile, format="MSEED", encoding=11, reclen=512,
+                             sequence_number=42)
+            tf.seek(0, os.SEEK_SET)
+            self.assertEqual(bytes_to_native_str(tf.read(6)),
+                             native_str("000042"))
 
     def test_writeAndReadDifferentRecordLengths(self):
         """
@@ -491,7 +507,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         # libmseed instance.
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         st = Stream([Trace(data=data)])
         record_lengths = [256, 512, 1024, 2048, 4096, 8192]
@@ -538,7 +554,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         Tests whether the header is correctly written and read.
         """
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, 50).astype(np.int32)
         stats = {'network': 'BW', 'station': 'TEST', 'location': 'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
@@ -566,7 +582,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         trace.stats.mseed.
         """
         npts = 6000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randint(-1000, 1000, npts).astype(np.int32)
         # Test all possible combinations of record length, encoding and
         # byte order.
@@ -824,7 +840,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         corresponding test in test_libmseed.py as it is just more convenient to
         write it in here.
         """
-        np.random.seed(800)  # make test reproducable
+        np.random.seed(800)  # make test reproducible
         data = np.random.randint(-1000, 1000, 50).astype(np.int32)
         # Create 4 different traces with 4 different dataqualities.
         stats1 = {'network': 'BW', 'station': 'TEST', 'location': 'A',
@@ -937,7 +953,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         methods.
         """
         npts = 1000
-        np.random.seed(815)  # make test reproducable
+        np.random.seed(815)  # make test reproducible
         data = np.random.randn(npts).astype(np.float64) * 1e3 + .5
         st = Stream([Trace(data=data)])
         # Loop over some record lengths.
